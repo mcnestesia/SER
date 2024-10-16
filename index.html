@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Puzzle Interactivo - Promoción EP</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 5vw;
+            text-align: center;
+            margin: 20px 0;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        #puzzle {
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 450px;
+            max-height: 450px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            border: 2px solid #333;
+            touch-action: none;
+        }
+        .piece {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://i.postimg.cc/nzbnfwXG/Portada-SER.jpg');
+            background-size: 300% 300%;
+            cursor: grab;
+            border: 1px solid #ddd;
+            touch-action: none;
+        }
+        .dragging {
+            opacity: 0.5;
+        }
+        #link {
+            display: none;
+            margin-top: 20px;
+            color: #fff;
+            font-size: 4vw;
+            text-align: center;
+            max-width: 90%;
+        }
+        #link a {
+            color: #4caf50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        #link a:hover {
+            text-decoration: underline;
+        }
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 24px;
+            }
+            #link {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>DICHOSOS LOS QUE ESCARBAN EN SU SER HASTA LLEGAR<br>Y NO LES ASUSTA LO QUE PUEDAN LLEGAR A ENCONTRAR.</h1>
+    <div id="puzzle"></div>
+    <div id="link">
+        ¡Felicidades! Has armado el puzzle. Escucha el EP aquí: 
+        <a href="https://www.youtube.com/@MCnestesia" target="_blank">YouTube</a>
+    </div>
+
+    <script>
+        const puzzle = document.getElementById('puzzle');
+        const link = document.getElementById('link');
+        const positions = [
+            '0% 0%', '50% 0%', '100% 0%',
+            '0% 50%', '50% 50%', '100% 50%',
+            '0% 100%', '50% 100%', '100% 100%'
+        ];
+
+        let shuffledPositions = [...positions].sort(() => Math.random() - 0.5);
+
+        function createPuzzle() {
+            shuffledPositions.forEach((position, index) => {
+                const piece = document.createElement('div');
+                piece.className = 'piece';
+                piece.style.backgroundPosition = position;
+                piece.setAttribute('data-position', positions[index]);
+                piece.draggable = true;
+                puzzle.appendChild(piece);
+                
+                piece.addEventListener('mousedown', handleDragStart);
+                piece.addEventListener('touchstart', handleTouchStart, {passive: false});
+            });
+        }
+
+        let draggedPiece = null;
+        let startX, startY;
+
+        function handleDragStart(e) {
+            draggedPiece = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            draggedPiece = e.target;
+            const touch = e.touches[0];
+            startX = touch.clientX - draggedPiece.offsetLeft;
+            startY = touch.clientY - draggedPiece.offsetTop;
+            draggedPiece.classList.add('dragging');
+        }
+
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('touchmove', handleTouchMove, {passive: false});
+
+        function handleDragMove(e) {
+            e.preventDefault();
+            if (!draggedPiece) return;
+            const targetPiece = document.elementFromPoint(e.clientX, e.clientY);
+            if (targetPiece && targetPiece.classList.contains('piece') && targetPiece !== draggedPiece) {
+                swapPieces(targetPiece);
+            }
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!draggedPiece) return;
+            const touch = e.touches[0];
+            const targetPiece = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (targetPiece && targetPiece.classList.contains('piece') && targetPiece !== draggedPiece) {
+                swapPieces(targetPiece);
+            }
+        }
+
+        document.addEventListener('mouseup', handleDragEnd);
+        document.addEventListener('touchend', handleDragEnd);
+
+        function handleDragEnd() {
+            if (draggedPiece) {
+                draggedPiece.classList.remove('dragging');
+                checkWin();
+                draggedPiece = null;
+            }
+        }
+
+        function swapPieces(targetPiece) {
+            let tempBg = targetPiece.style.backgroundPosition;
+            targetPiece.style.backgroundPosition = draggedPiece.style.backgroundPosition;
+            draggedPiece.style.backgroundPosition = tempBg;
+        }
+
+        function checkWin() {
+            const pieces = document.querySelectorAll('.piece');
+            let correct = true;
+
+            pieces.forEach(piece => {
+                const currentPos = piece.style.backgroundPosition;
+                const correctPos = piece.getAttribute('data-position');
+
+                if (currentPos !== correctPos) {
+                    correct = false;
+                }
+            });
+
+            if (correct) {
+                link.style.display = 'block';
+            }
+        }
+
+        createPuzzle();
+    </script>
+</body>
+</html>
