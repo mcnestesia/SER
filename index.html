@@ -37,6 +37,7 @@
             gap: 2px;
             border: 2px solid #333;
             touch-action: none;
+            position: relative;
         }
         .piece {
             width: 100%;
@@ -45,6 +46,10 @@
             background-size: 300% 300%;
             cursor: grab;
             border: 1px solid #ddd;
+            transition: transform 0.1s ease-out;
+            position: absolute;
+            top: 0;
+            left: 0;
             touch-action: none;
         }
         .dragging {
@@ -102,6 +107,8 @@
                 piece.style.backgroundPosition = position;
                 piece.setAttribute('data-position', positions[index]);
                 piece.draggable = true;
+                piece.style.left = ${(index % 3) * 33.33}%;
+                piece.style.top = ${Math.floor(index / 3) * 33.33}%;
                 puzzle.appendChild(piece);
                 
                 piece.addEventListener('mousedown', handleDragStart);
@@ -130,22 +137,18 @@
         document.addEventListener('touchmove', handleTouchMove, {passive: false});
 
         function handleDragMove(e) {
-            e.preventDefault();
             if (!draggedPiece) return;
-            const targetPiece = document.elementFromPoint(e.clientX, e.clientY);
-            if (targetPiece && targetPiece.classList.contains('piece') && targetPiece !== draggedPiece) {
-                swapPieces(targetPiece);
-            }
+            const x = e.clientX - startX;
+            const y = e.clientY - startY;
+            draggedPiece.style.transform = translate(${x}px, ${y}px);
         }
 
         function handleTouchMove(e) {
-            e.preventDefault();
             if (!draggedPiece) return;
             const touch = e.touches[0];
-            const targetPiece = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (targetPiece && targetPiece.classList.contains('piece') && targetPiece !== draggedPiece) {
-                swapPieces(targetPiece);
-            }
+            const x = touch.clientX - startX;
+            const y = touch.clientY - startY;
+            draggedPiece.style.transform = translate(${x}px, ${y}px);
         }
 
         document.addEventListener('mouseup', handleDragEnd);
@@ -154,6 +157,7 @@
         function handleDragEnd() {
             if (draggedPiece) {
                 draggedPiece.classList.remove('dragging');
+                draggedPiece.style.transform = ''; // Reseteamos la posición
                 checkWin();
                 draggedPiece = null;
             }
@@ -184,6 +188,9 @@
         }
 
         createPuzzle();
+    </script>
+</body>
+</html>
     </script>
 </body>
 </html>
