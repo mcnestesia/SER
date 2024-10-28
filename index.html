@@ -36,7 +36,7 @@
             grid-template-rows: repeat(3, 1fr);
             gap: 2px;
             border: 2px solid #333;
-            position: relative;
+            touch-action: none;
         }
         .piece {
             width: 100%;
@@ -45,8 +45,6 @@
             background-size: 300% 300%;
             cursor: grab;
             border: 1px solid #ddd;
-            position: relative;
-            transition: transform 0.1s ease-out;
             touch-action: none;
         }
         .dragging {
@@ -103,6 +101,7 @@
                 piece.className = 'piece';
                 piece.style.backgroundPosition = position;
                 piece.setAttribute('data-position', positions[index]);
+                piece.draggable = true;
                 puzzle.appendChild(piece);
                 
                 piece.addEventListener('mousedown', handleDragStart);
@@ -131,18 +130,22 @@
         document.addEventListener('touchmove', handleTouchMove, {passive: false});
 
         function handleDragMove(e) {
+            e.preventDefault();
             if (!draggedPiece) return;
-            const x = e.clientX - startX;
-            const y = e.clientY - startY;
-            draggedPiece.style.transform = translate(${x}px, ${y}px);
+            const targetPiece = document.elementFromPoint(e.clientX, e.clientY);
+            if (targetPiece && targetPiece.classList.contains('piece') && targetPiece !== draggedPiece) {
+                swapPieces(targetPiece);
+            }
         }
 
         function handleTouchMove(e) {
+            e.preventDefault();
             if (!draggedPiece) return;
             const touch = e.touches[0];
-            const x = touch.clientX - startX;
-            const y = touch.clientY - startY;
-            draggedPiece.style.transform = translate(${x}px, ${y}px);
+            const targetPiece = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (targetPiece && targetPiece.classList.contains('piece') && targetPiece !== draggedPiece) {
+                swapPieces(targetPiece);
+            }
         }
 
         document.addEventListener('mouseup', handleDragEnd);
@@ -151,10 +154,15 @@
         function handleDragEnd() {
             if (draggedPiece) {
                 draggedPiece.classList.remove('dragging');
-                draggedPiece.style.transform = '';
                 checkWin();
                 draggedPiece = null;
             }
+        }
+
+        function swapPieces(targetPiece) {
+            let tempBg = targetPiece.style.backgroundPosition;
+            targetPiece.style.backgroundPosition = draggedPiece.style.backgroundPosition;
+            draggedPiece.style.backgroundPosition = tempBg;
         }
 
         function checkWin() {
